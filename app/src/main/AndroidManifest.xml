@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
-    package="com.honeycom.saas.mobile">
+    package="com.honeycom.saas.pad">
 
     <!-- 网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" /> <!-- 读写权限 -->
@@ -51,7 +51,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".StartPageActivity" android:theme="@style/AppThemeTwo" android:windowSoftInputMode="adjustNothing">
+        <activity android:name="com.honeycom.saas.pad.StartPageActivity" android:theme="@style/AppThemeTwo" android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -60,7 +60,7 @@
         </activity>
 
         <activity
-            android:name=".ui.activity.MainActivity"
+            android:name="com.honeycom.saas.pad.ui.activity.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
@@ -79,9 +79,9 @@
         </activity>
 
 
-        <activity android:name=".ui.activity.ReminderActivity" />
+        <activity android:name="com.honeycom.saas.pad.ui.activity.ReminderActivity" />
 
-        <activity android:name=".ui.activity.ExecuteActivity" />
+        <activity android:name="com.honeycom.saas.pad.ui.activity.ExecuteActivity" />
 
     </application>
 
