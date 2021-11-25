@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,6 +61,7 @@ import com.honeycom.saas.pad.http.bean.BrowserBean;
 import com.honeycom.saas.pad.util.BaseUtils;
 import com.honeycom.saas.pad.util.Constant;
 import com.honeycom.saas.pad.util.SPUtils;
+import com.honeycom.saas.pad.util.StatusBarCompat;
 import com.honeycom.saas.pad.util.SystemUtil;
 import com.honeycom.saas.pad.web.MyWebViewClient;
 import com.honeycom.saas.pad.web.WebViewSetting;
@@ -114,7 +116,9 @@ public class ExecuteActivity extends BaseActivity {
     private static final String[] APPLY_PERMISSIONS_APPLICATION = { //第三方应用授权
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.ACCESS_FINE_LOCATION};
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE};
     private static final int ADDRESS_PERMISSIONS_CODE = 1;
     //如果权限勾选了不再询问
     private static final int NOT_NOTICE = 2;
@@ -129,10 +133,10 @@ public class ExecuteActivity extends BaseActivity {
     View mWebError;
     @BindView(R.id.glide_gif)
     View mLoadingPage;
-    @BindView(R.id.apply_menu_image1)
-    ImageView mApplyMenuImage1;
-    @BindView(R.id.apply_menu_close)
-    ImageView mApplyMenuHome1;
+//    @BindView(R.id.apply_menu_image1)
+//    ImageView mApplyMenuImage1;
+//    @BindView(R.id.apply_menu_close)
+//    ImageView mApplyMenuHome1;
 
     /******************object**********************/
     //调用照相机返回图片文件
@@ -210,6 +214,13 @@ public class ExecuteActivity extends BaseActivity {
     protected void initWidget() {
         super.initWidget();
 
+        //更改状态栏颜色
+        StatusBarCompat.compat(this, ContextCompat.getColor(this, R.color.status_text));
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            //修改为深色，因为我们把状态栏的背景色修改为主题色白色，默认的文字及图标颜色为白色，导致看不到了。
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+        }
+
         try {
             if (!url.isEmpty()) {
                 webView(url);
@@ -229,17 +240,17 @@ public class ExecuteActivity extends BaseActivity {
     protected void initClick() {
 
         //关闭
-        mApplyMenuHome1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mNewWeb.evaluateJavascript("window.sdk.notification()", new ValueCallback<String>() {
-                    @Override
-                    public void onReceiveValue(String value) {
-                    }
-                });
-                finish();
-            }
-        });
+//        mApplyMenuHome1.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                mNewWeb.evaluateJavascript("window.sdk.notification()", new ValueCallback<String>() {
+//                    @Override
+//                    public void onReceiveValue(String value) {
+//                    }
+//                });
+//                finish();
+//            }
+//        });
     }
 
     /**
@@ -278,6 +289,28 @@ public class ExecuteActivity extends BaseActivity {
         //js交互接口定义
 //        mNewWeb.addJavascriptInterface(new ApplyFirstActivity.MJavaScriptInterface(getApplicationContext()), "ApplyFunc");
         wvClientSetting(mNewWeb);
+
+        //回退监听
+        mNewWeb.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0 && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    Log.e(TAG, "onKey: web back  1");
+                    if (mNewWeb != null && mNewWeb.canGoBack()) {
+                        Log.e(TAG, "onKey: web back  2"+goBackUrl);
+                        if (goBackUrl.contains("/p/home")) { //首页拦截物理返回键  直接关闭应用
+                            finish();
+                        } else if (goBackUrl.contains("/information")) { //确保从该页面返回的是首页
+                            webView(Constant.text_url);
+                        } else {
+                            mNewWeb.goBack();
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
 
         /**
          * 获取版本号
@@ -333,11 +366,11 @@ public class ExecuteActivity extends BaseActivity {
             @Override
             public void handler(String data, CallBackFunction function) {
                 try {
-                    SharedPreferences sb = getSharedPreferences("userInfoSafe", MODE_PRIVATE);
-                    String userInfo = sb.getString("userInfo", "");
+                    String userInfo = (String) SPUtils.getInstance().get("userInfo", "");
+                    Log.e(TAG, userInfo);
                     if (!userInfo.isEmpty()) {
                         function.onCallBack(userInfo);
-                    } else {
+                    }else{
                         Toast.makeText(mContext, "获取用户数据异常", Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {
@@ -1126,20 +1159,22 @@ public class ExecuteActivity extends BaseActivity {
      * 跳转到用户拍照/选取相册
      */
     public void openImageCaptureActivity() {
-        String filePath = Environment.getExternalStorageDirectory() + File.separator
-                + Environment.DIRECTORY_PICTURES + File.separator;
-        String fileName = "IMG_" + DateFormat.format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
-        String _file = filePath + fileName;
-//        imageUriThreeApply = FileProvider.getUriForFile(MyApplication.getContext(), MyApplication.getContext().getApplicationContext().getPackageName() + ".fileprovider", new File( _file));//Uri.fromFile(new File(filePath + fileName));
+        File dPictures = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        //图片名称
+        String mFileName = "IMG_" + System.currentTimeMillis() + ".jpg";
+        //图片路径
+        String mFilePath = dPictures.getAbsolutePath() + "/" + mFileName;
+        //创建拍照存储的图片文件
+        tempFile = new File(mFilePath);
         //相册相机选择窗
         Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             //设置7.0中共享文件，分享路径定义在xml/file_paths.xml
             captureIntent.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-            imageUriThreeApply = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", new File( _file));
+            imageUriThreeApply = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", tempFile);
             captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
         } else {
-            imageUriThreeApply =  Uri.fromFile(new File( _file));
+            imageUriThreeApply =  Uri.fromFile(tempFile);
             captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
         }
         captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
@@ -1157,19 +1192,46 @@ public class ExecuteActivity extends BaseActivity {
      * 跳转到用户拍照/选取相册
      */
     public void openImageChooserActivity() {
-        String filePath = Environment.getExternalStorageDirectory() + File.separator
-                + Environment.DIRECTORY_PICTURES + File.separator;
-        String fileName = "IMG_" + DateFormat.format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
-        String _file = filePath + fileName;
-        imageUriThreeApply = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", new File( _file));//Uri.fromFile(new File(filePath + fileName));
-        //相册相机选择窗
-        Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
+//        String filePath = Environment.getExternalStorageDirectory() + File.separator
+//                + Environment.DIRECTORY_PICTURES + File.separator;
+//        String fileName = "IMG_" + DateFormat.format("yyyyMMdd_hhmmss", Calendar.getInstance(Locale.CHINA)) + ".jpg";
+//        String _file = filePath + fileName;
+//        imageUriThreeApply = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", new File( _file));//Uri.fromFile(new File(filePath + fileName));
+//        //相册相机选择窗
+//        Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//        captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
+//
+//        Intent Photo = new Intent(Intent.ACTION_PICK,
+//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//        Intent chooserIntent = Intent.createChooser(Photo, "Image Chooser");
+//        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Parcelable[]{captureIntent});
+//        startActivityForResult(chooserIntent, FILE_CHOOSER_RESULT_CODE);
 
+        //	获取图片沙盒文件夹
+        File dPictures = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        //图片名称
+        String mFileName = "IMG_" + System.currentTimeMillis() + ".jpg";
+        //图片路径
+        String mFilePath = dPictures.getAbsolutePath() + "/" + mFileName;
+        //创建拍照存储的图片文件
+        tempFile = new File(mFilePath);
+        //跳转到调用系统相机
+        Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            //设置7.0中共享文件，分享路径定义在xml/file_paths.xml
+            captureIntent.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            imageUriThreeApply = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID + ".fileprovider", tempFile);
+            captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
+        } else {
+            imageUriThreeApply =  Uri.fromFile(tempFile);
+            captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriThreeApply);
+        }
+        Log.i(TAG, "start gotoCamera: ");
         Intent Photo = new Intent(Intent.ACTION_PICK,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         Intent chooserIntent = Intent.createChooser(Photo, "Image Chooser");
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Parcelable[]{captureIntent});
+        Log.e(TAG, "openImageChooserActivity: ");
         startActivityForResult(chooserIntent, FILE_CHOOSER_RESULT_CODE);
 
     }

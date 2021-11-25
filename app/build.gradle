@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.honeycom.saas.mobile"
+        applicationId "com.honeycom.saas.pad"
 
         // 仅保留中文语种的资源
         resConfigs 'zh'
@@ -56,6 +56,13 @@ dependencies {
 
     // 友盟封装
     implementation project(':umeng')
+
+    //RxJava
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
+    implementation 'com.squareup.retrofit2:retrofit:2.7.2'
+    implementation 'com.squareup.retrofit2:converter-gson:2.7.2'
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.7.2'
 
     //okhttp3
     implementation 'com.squareup.okhttp3:okhttp:3.3.0'
