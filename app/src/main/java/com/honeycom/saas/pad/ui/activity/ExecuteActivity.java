@@ -22,7 +22,6 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.text.TextUtils;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -71,11 +70,9 @@ import com.yzq.zxinglibrary.bean.ZxingConfig;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -359,6 +356,24 @@ public class ExecuteActivity extends BaseActivity {
 
             }
         });
+
+        //存储用户登录页面传递的信息
+        mNewWeb.registerHandler("setUserInfo", new BridgeHandler() {
+            @Override
+            public void handler(String data, CallBackFunction function) {
+                try {
+                    Log.e(TAG, "获取用户登录信息: " + data);
+                    if (!data.isEmpty()) {
+                        SPUtils.getInstance().put("userInfo", data);
+                        function.onCallBack("success");
+                    }else {
+                        function.onCallBack("fail");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         /**
          * 传递用户登录信息
          */
@@ -371,6 +386,7 @@ public class ExecuteActivity extends BaseActivity {
                     if (!userInfo.isEmpty()) {
                         function.onCallBack(userInfo);
                     }else{
+                        function.onCallBack("fail");
                         Toast.makeText(mContext, "获取用户数据异常", Toast.LENGTH_SHORT).show();
                     }
                 } catch (Exception e) {

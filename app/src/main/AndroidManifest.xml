@@ -35,7 +35,7 @@
         android:value="b44bea014531123f94c3ba7b7afbaad2" />
 
     <application
-        android:name=".App"
+        android:name=".hd.App"
         android:allowBackup="true"
         android:icon="@drawable/logo"
         android:label="@string/app_name"
@@ -43,19 +43,18 @@
         android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.honeycom.saas.pad.StartPageActivity"
+        <activity android:name=".hd.StartPageActivity"
             android:screenOrientation="landscape"
             android:theme="@style/AppThemeTwo"
             android:windowSoftInputMode="adjustNothing">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
-            android:name="com.honeycom.saas.pad.ui.activity.MainActivity"
+            android:name=".hd.ui.activity.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="landscape"
@@ -75,7 +74,7 @@
         </activity>
 
         <activity
-            android:name=".push.MfrMessageActivity"
+            android:name=".hd.push.MfrMessageActivity"
             android:exported="true"
             android:launchMode="singleTask">
             <intent-filter>
@@ -102,9 +101,9 @@
         </provider>
 
 
-        <activity android:name="com.honeycom.saas.pad.ui.activity.ReminderActivity" android:screenOrientation="landscape"/>
+        <activity android:name=".hd.ui.activity.ReminderActivity" android:screenOrientation="landscape"/>
 
-        <activity android:name="com.honeycom.saas.pad.ui.activity.ExecuteActivity" android:theme="@style/AppThemeThree" android:screenOrientation="landscape"/>
+        <activity android:name=".hd.ui.activity.ExecuteActivity" android:theme="@style/AppThemeThree" android:screenOrientation="landscape"/>
 
     </application>
 

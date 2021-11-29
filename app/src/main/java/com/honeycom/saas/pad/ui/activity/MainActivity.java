@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -17,10 +16,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebSettings;
-import android.webkit.WebStorage;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -50,7 +47,6 @@ import com.honeycom.saas.pad.http.bean.UserInfoBean;
 import com.honeycom.saas.pad.http.bean.VersionInfo;
 import com.honeycom.saas.pad.util.CleanDataUtils;
 import com.honeycom.saas.pad.util.Constant;
-import com.honeycom.saas.pad.util.NewToastUtil;
 import com.honeycom.saas.pad.util.SPUtils;
 import com.honeycom.saas.pad.util.StatusBarCompat;
 import com.honeycom.saas.pad.util.VersionUtils;
@@ -71,8 +67,6 @@ import java.util.Objects;
 
 import butterknife.BindView;
 import okhttp3.Call;
-
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
 * author : zhoujr
@@ -333,7 +327,7 @@ public class MainActivity  extends BaseActivity {
         });
 
         /**
-         * 是否在壳子忠（h5调用）
+         * 是否在壳子中（h5调用）
          */
         mNewWeb.registerHandler("isInSurface", new BridgeHandler() {
             @Override
@@ -513,6 +507,8 @@ public class MainActivity  extends BaseActivity {
                             sendDeviceToken(deviceToken);
                         }
                         function.onCallBack("success");
+                    }else {
+                        function.onCallBack("fail");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -529,6 +525,8 @@ public class MainActivity  extends BaseActivity {
                     Log.e(TAG, userInfo);
                     if (!userInfo.isEmpty()) {
                         function.onCallBack(userInfo);
+                    }else {
+                        function.onCallBack("fail");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -551,15 +549,25 @@ public class MainActivity  extends BaseActivity {
                         Log.e(TAG, "currentUrl: "+currentUrl );
                         if (!redirectUrl.isEmpty()) {
                             Intent intent;
-                            //设备app单独跳转一个页面
-                            if (redirectUrl.contains("/p/home")) {
+                            //生成app单独跳转一个页面
+                            if (redirectUrl.contains("/p/")) {
                                 intent = new Intent(MainActivity.this, ExecuteActivity.class);
+                                if (redirectUrl.contains("?")) {
+                                    redirectUrl = redirectUrl +"&r="+new Date().getTime();
+                                }else {
+                                    redirectUrl = redirectUrl +"?r="+new Date().getTime();
+                                }
                                 intent.putExtra("url", redirectUrl);
 //                                intent.putExtra("token", usertoken1);
 //                                intent.putExtra("userid", userid1);
 //                                intent.putExtra("appId", appId);
 //                                intent.putExtra("zxIdTouTiao", zxIdTouTiao);
-                                intent.putExtra("isFromHome", currentUrl.contains("apply") ? "0": "1");
+//                                intent.putExtra("isFromHome", currentUrl.contains("apply") ? "0": "1");
+                                startActivity(intent);
+                            }else {
+                                //其他系统待定
+                                intent = new Intent(MainActivity.this, ExecuteActivity.class);
+                                intent.putExtra("url", redirectUrl);
                                 startActivity(intent);
                             }
 

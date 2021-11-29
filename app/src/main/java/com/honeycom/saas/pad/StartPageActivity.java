@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -19,12 +20,15 @@ import com.honeycom.saas.pad.base.BaseActivity;
 import com.honeycom.saas.pad.http.RemoteRepository;
 import com.honeycom.saas.pad.http.bean.AdMessageBean;
 import com.honeycom.saas.pad.http.bean.AdMessagePackage;
+import com.honeycom.saas.pad.push.PushHelper;
 import com.honeycom.saas.pad.ui.activity.MainActivity;
 import com.honeycom.saas.pad.ui.activity.ReminderActivity;
 import com.honeycom.saas.pad.util.NetworkUtils;
 import com.honeycom.saas.pad.util.SPUtils;
 import com.honeycom.saas.pad.widget.AgreementDialog;
 import com.honeycom.saas.pad.widget.QMUITouchableSpan;
+import com.umeng.message.PushAgent;
+import com.umeng.message.api.UPushRegisterCallback;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -104,6 +108,33 @@ public class StartPageActivity extends BaseActivity {
             djs = initTimeCount;
             handler.sendMessageDelayed(handler.obtainMessage(-1),1000);
         }
+
+        //获取友盟推送deviceToken
+        String deviceToken = PushAgent.getInstance(this).getRegistrationId();
+        Log.e(TAG, "deviceToken: "+deviceToken);
+        if (TextUtils.isEmpty(deviceToken)) {
+            initPush();
+        }else {
+            SPUtils.getInstance().put("deviceToken", deviceToken);
+        }
+    }
+
+    //初始化推送
+    private void initPush() {
+        Log.e(TAG, "init push: ");
+        PushHelper.init(getApplicationContext());
+        PushAgent.getInstance(getApplicationContext()).register(new UPushRegisterCallback() {
+            @Override
+            public void onSuccess(final String deviceToken) {
+                Log.e(TAG, "init deviceToken: "+deviceToken);
+                SPUtils.getInstance().put("deviceToken", deviceToken);
+            }
+
+            @Override
+            public void onFailure(String code, String msg) {
+                Log.e(TAG, "code:" + code + " msg:" + msg);
+            }
+        });
     }
 
     @Override
@@ -151,15 +182,6 @@ public class StartPageActivity extends BaseActivity {
     }
 
     private void startHome() {
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                Intent intent = new Intent(StartPageActivity.this, MainActivity.class);
-//                startActivity(intent);
-//                finish();
-//            }
-//        }, 500);
-
         Intent intent = new Intent(StartPageActivity.this, MainActivity.class);
         startActivity(intent);
         finish();
