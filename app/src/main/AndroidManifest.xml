@@ -26,6 +26,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
@@ -87,7 +88,7 @@
                 <data
                     android:host="${applicationId}"
                     android:path="/thirdpush"
-                    android:scheme="agoo" />
+                    android:scheme="test" />
             </intent-filter>
         </activity>
 
@@ -105,6 +106,8 @@
         <activity android:name="com.honeycom.saas.pad.ui.activity.ReminderActivity" android:screenOrientation="landscape"/>
 
         <activity android:name="com.honeycom.saas.pad.ui.activity.ExecuteActivity" android:theme="@style/AppThemeThree" android:screenOrientation="landscape"/>
+
+        <activity android:name=".ui.activity.WeighActivity"  android:theme="@style/AppThemeThree" android:screenOrientation="landscape"/>
 
     </application>
 

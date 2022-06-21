@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -286,7 +287,7 @@ public class MainActivity  extends BaseActivity {
                         Log.e(TAG, "onKey: web back  2"+myOrder);
 //                        SharedPreferences sb = getSharedPreferences("userInfoSafe", MODE_PRIVATE);
 //                        String userInfo = sb.getString("userInfo", "");
-                        if (myOrder.contains("/app/home")) { //首页拦截物理返回键  直接关闭应用
+                        if (myOrder.contains("/home")) { //首页拦截物理返回键  直接关闭应用
                             exit();
                         } else if (myOrder.contains("/information")) { //确保从该页面返回的是首页
                             webView(Constant.text_url);
@@ -401,6 +402,29 @@ public class MainActivity  extends BaseActivity {
             }
         });
 
+        //存储用户登录页面传递的信息
+        mNewWeb.registerHandler("setUserInfo", new BridgeHandler() {
+            @Override
+            public void handler(String data, CallBackFunction function) {
+                try {
+                    Log.e(TAG, "获取用户登录信息: " + data);
+                    if (!data.isEmpty()) {
+                        SPUtils.getInstance().put("userInfo", data);
+                        //绑定推送deviceToken
+                        UserInfoBean userInfoBean = new Gson().fromJson(data, UserInfoBean.class);
+                        if (userInfoBean !=null && !TextUtils.isEmpty(userInfoBean.getCompanyId())) {
+                            userToken = userInfoBean.getAccessToken();
+                            String deviceToken = (String) SPUtils.getInstance().get("deviceToken","");
+                            sendDeviceToken(deviceToken);
+                        }
+                        function.onCallBack("success");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
         //记住密码功能(设置登录信息)
         mNewWeb.registerHandler("saveLoginInfo", new BridgeHandler() {
             @Override
@@ -408,7 +432,7 @@ public class MainActivity  extends BaseActivity {
                 Log.e(TAG, "handler = saveLoginInfo, data from web = " + data);
                 if (!TextUtils.isEmpty(data)) {
                     SPUtils.getInstance().put("loginData", data);
-                    function.onCallBack("android receive success");
+                    function.onCallBack("success");
                 }
             }
         });
@@ -428,8 +452,34 @@ public class MainActivity  extends BaseActivity {
         mNewWeb.registerHandler("clearLoginInfo", new BridgeHandler() {
             @Override
             public void handler(String data, CallBackFunction function) {
+                Log.e(TAG, "handler = clearLoginInfo" + data);
                 SPUtils.getInstance().remove("loginData");
-                function.onCallBack("android clear loginData success");
+                SPUtils.getInstance().remove("userInfo");
+                String deviceToken = (String) SPUtils.getInstance().get("deviceToken","");
+//                unBindDeviceToken(deviceToken);
+                Map<String, String> headerMap =  new HashMap<>();
+                headerMap.put("authorization", "Bearer "+userToken);
+                Map<String, String> paramsMap =  new HashMap<>();
+                paramsMap.put("deviceToken", deviceToken);
+                paramsMap.put("deviceType", Constant.equipment_type);
+                paramsMap.put("platformType", Constant.platform_type);
+                String jsonStr = new Gson().toJson(paramsMap);
+                Log.e(TAG, "request params: "+jsonStr);
+                Log.e(TAG, "request header: "+headerMap);
+                Log.e(TAG, "request api: "+Constant.userUnbindRelation);
+                OkhttpUtil.okHttpPostJson(Constant.userUnbindRelation, jsonStr, headerMap, new CallBackUtil.CallBackString() {
+                    @Override
+                    public void onFailure(Call call, Exception e) {
+                        Log.e(TAG, "onFailure: "+e.getMessage());
+                        function.onCallBack("fail");
+                    }
+
+                    @Override
+                    public void onResponse(String response) {
+                        Log.e(TAG, "-----onResponse: " + response);
+                        function.onCallBack("success");
+                    }
+                });
             }
         });
 
@@ -497,28 +547,6 @@ public class MainActivity  extends BaseActivity {
             }
         });
 
-        //存储用户登录页面传递的信息
-        mNewWeb.registerHandler("setUserInfo", new BridgeHandler() {
-            @Override
-            public void handler(String data, CallBackFunction function) {
-                try {
-                    Log.e(TAG, "获取用户登录信息: " + data);
-                    if (!data.isEmpty()) {
-                        SPUtils.getInstance().put("userInfo", data);
-                        //绑定推送deviceToken
-                        UserInfoBean userInfoBean = new Gson().fromJson(data, UserInfoBean.class);
-                        if (userInfoBean !=null && !TextUtils.isEmpty(userInfoBean.getCompanyId())) {
-                            userToken = userInfoBean.getAccessToken();
-                            String deviceToken = (String) SPUtils.getInstance().get("deviceToken","");
-                            sendDeviceToken(deviceToken);
-                        }
-                        function.onCallBack("success");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
 
         //向页面传递用户登录基本信息
         mNewWeb.registerHandler("getUserInfo", new BridgeHandler() {
@@ -551,21 +579,35 @@ public class MainActivity  extends BaseActivity {
                         Log.e(TAG, "currentUrl: "+currentUrl );
                         if (!redirectUrl.isEmpty()) {
                             Intent intent;
-                            //设备app单独跳转一个页面
-                            if (redirectUrl.contains("/p/home")) {
+                            //生成app单独跳转一个页面
+                            if (redirectUrl.contains("/p/")) {
+                                intent = new Intent(MainActivity.this, WeighActivity.class);
+                                if (redirectUrl.contains("?")) {
+                                    redirectUrl = redirectUrl +"&r="+new Date().getTime();
+                                }else {
+                                    redirectUrl = redirectUrl +"?r="+new Date().getTime();
+                                }
+                                intent.putExtra("url", redirectUrl);
+                                startActivity(intent);
+                            }else if (redirectUrl.contains("/ws")) {
+                                intent = new Intent(MainActivity.this, WeighActivity.class);
+                                if (redirectUrl.contains("?")) {
+                                    redirectUrl = redirectUrl +"&r="+new Date().getTime();
+                                }else {
+                                    redirectUrl = redirectUrl +"?r="+new Date().getTime();
+                                }
+                                intent.putExtra("url", redirectUrl);
+                                startActivity(intent);
+                            }else {
+                                //其他系统待定
                                 intent = new Intent(MainActivity.this, ExecuteActivity.class);
                                 intent.putExtra("url", redirectUrl);
-//                                intent.putExtra("token", usertoken1);
-//                                intent.putExtra("userid", userid1);
-//                                intent.putExtra("appId", appId);
-//                                intent.putExtra("zxIdTouTiao", zxIdTouTiao);
-                                intent.putExtra("isFromHome", currentUrl.contains("apply") ? "0": "1");
                                 startActivity(intent);
                             }
-
-
                         }
-
+                        function.onCallBack("success");
+                    }else {
+                        function.onCallBack("fail");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -609,8 +651,10 @@ public class MainActivity  extends BaseActivity {
             public void handler(String data, CallBackFunction function) {
                 try {
                     SPUtils.getInstance().put("userInfoSafe","");
+                    function.onCallBack("success");
                 } catch (Exception e) {
                     e.printStackTrace();
+                    function.onCallBack("fail");
                 }
             }
         });
@@ -909,6 +953,77 @@ public class MainActivity  extends BaseActivity {
         SPUtils.getInstance().put("apply_url","");
         super.onStart();
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        Uri uri = getIntent().getData(); //用户华为通知跳转  浏览器跳转应用  oppo通知跳转
+        if (uri != null) {
+            Log.e(TAG, "open notice list: " + uri);
+
+
+//            String thirdId = uri.getQueryParameter("thirdId");
+//            if (thirdId != null) {
+//                intent = new Intent(this, NewsActivity.class);
+//                intent.putExtra("url", thirdId);
+//                startActivity(intent);
+//            }
+            String open = uri.getQueryParameter("open");
+            if (open.equals("message")) {
+                Log.e(TAG, "huaweiUrl: " + uri);
+                //test://zzy:8080/home?open=message&appid=2&appName=精益生产电子看板  用户华为通知跳转
+//                String huaWei = uri.getQueryParameter("appid");
+//                String appName = uri.getQueryParameter("appName");
+//                JSONObject jsonObject = new JSONObject();
+//                jsonObject.put("appid", huaWei);
+//                jsonObject.put("appName", appName);
+//                String s = jsonObject.toJSONString();
+//                Log.e(TAG, "onNewIntent: " + s);
+//                webView(Constant.APP_NOTICE_LIST);
+//                Handler handler = new Handler();
+//                handler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        //要执行的操作
+//                        mNewWeb.callHandler("PushMessageIntent", s, new CallBackFunction() {
+//                            @Override
+//                            public void onCallBack(String data) {
+//
+//                            }
+//                        });
+//                    }
+//                }, 1000);//2秒后执行Runnable中的run方法
+//            }
+            }
+
+            String app_notice_list = intent.getStringExtra("APP_NOTICE_LIST");
+//            String xiaomiMessage = intent.getStringExtra("pushContentMessage");
+            if (app_notice_list != null) {
+//            webView(Constant.APP_NOTICE_LIST);
+                if (app_notice_list.equals("咨询")) { //跳转到咨询页面
+//                    webView(Constant.MyNews);
+                } else if (app_notice_list.equals(Constant.NOTICE_LIST)) {
+                    webView(Constant.text_url);
+//                    Log.e(TAG, "xiaomiMessage: " + xiaomiMessage);
+//                    Handler handler = new Handler();
+//                    handler.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            //要执行的操作
+//                            mNewWeb.callHandler("PushMessageIntent", xiaomiMessage, new CallBackFunction() {
+//                                @Override
+//                                public void onCallBack(String data) {
+//
+//                                }
+//                            });
+//                        }
+//                    }, 1000);//2秒后执行Runnable中的run方法
+                }
+            }
+        }
+    }
+
+
 
 
 }

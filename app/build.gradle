@@ -88,4 +88,20 @@ dependencies {
     /*扫一扫*/
     implementation 'com.github.yuzhiqiang1993:zxing:2.2.8'
 
+    //下载插件
+    implementation 'com.liulishuo.filedownloader:library:1.7.7'
+
+    //webview 缓存版
+    implementation 'ren.yale.android:cachewebviewlib:2.2.1'
+
+    //称重系统集成所需第三方
+    implementation 'com.github.GrenderG:Toasty:1.5.2'
+    implementation 'org.java-websocket:Java-WebSocket:1.5.2'
+
+    //m8 肖邦扫描集成
+    implementation files('libs/ReaderManager.jar')
+
+    //移动pda集成
+    implementation files('libs/ScanManager_V202110201300.jar')
+
 }

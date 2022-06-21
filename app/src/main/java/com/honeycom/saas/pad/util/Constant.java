@@ -2,32 +2,11 @@ package com.honeycom.saas.pad.util;
 
 //常量类
 public class Constant {
-    /**
-     * 测试环境前缀
-     * 页面前缀 ：https://njtestyyzxpad.zhizaoyun.com/
-     * 接口前缀 ：https://njtesthoneycomb.zhizaoyun.com/gateway/
-     */
-
-    /**
-     * 生产环境前缀
-     * 页面前缀 ：https://padclient.zhizaoyun.com/
-     * 接口前缀 ：https://ulogin.zhizaoyun.com/gateway/
-     */
-
-    /**
-     * 调试环境前缀
-     * 页面前缀 ：https://mobileclientthird.zhizaoyun.com/
-     * 接口前缀 ：https://mobileclientthird.zhizaoyun.com/gateway/
-     */
-    public static final String DEMONSTRAION_PAGE_URL = "https://mobileclientthird.zhizaoyun.com/";
-    public static final String DEMONSTRAION_INTERFACE_URL = "https://mobileclientthird.zhizaoyun.com/gateway/";
-
-
 
     public static String profile = "prod";//dev prod test "http://172.16.41.239:9542";//
 
-    public static final String PAGE_URL = "http://mestestwebk8s.zhizaoyun.com:31810";//String.format("https://%s.zhizaoyun.com/", getCurrentDomain()[0]); // 172.16.23.253:3001/";//172.16.23.138:3003/
-    public static final String INTERFACE_URL =  "http://mestestapik8s.zhizaoyun.com:31008";
+    public static final String PAGE_URL = "https://fmtest-app.zhizaoyun.com:30443";//"http://mestestwebk8s.zhizaoyun.com:31811";//String.format("https://%s.zhizaoyun.com/", getCurrentDomain()[0]);
+    public static final String INTERFACE_URL =  "https://mestestapik8s.zhizaoyun.com:30443";//"http://mestestapik8s.zhizaoyun.com:31008";
     public static final String equipmentId = "2";
     public static final String platform_type = "saas";
     public static final String equipment_type = "pad";
@@ -57,22 +36,10 @@ public class Constant {
     public static final String Apply_Details = INTERFACE_URL + "api-apps/client/recentlyApps?equipmentId=2&userId="; //获取悬浮窗应用
     public static final String Apply_Details_POP = INTERFACE_URL + "api-apps/client/recentlyApps"; //获取悬浮窗应用
     public static final String upload_multifile = INTERFACE_URL + "api-f/upload/multifile"; //上传图片
-    public static final String headPic = INTERFACE_URL + "api-u/headPic"; //获取头像是否修改成功
-    public static final String TAKE_PHOTO = INTERFACE_URL + "api-f/download/getFileUrl";//获取头像URL
-    public static final String appOrderInfo = INTERFACE_URL + "api-pay/aliPay/appOrderInfo/"; //获取支付宝订单详情
-    public static final String wxPay_appOrderInfo = INTERFACE_URL + "api-pay/wxPay/appOrderInfo/"; //获取微信订单详情
-    public static final String payType = INTERFACE_URL + "api-apps/client/order/user/payType";  //获取用户支付类型，订单号，用户id
-    public static final String NOTICE_OPEN_SWITCH = INTERFACE_URL + "api-n/notification-anon/client/notice/status"; //开启或关闭用户通知接口
-    public static final String TOKEN_IS_OK = INTERFACE_URL + "api-u/users/current?access_token=";//token是否有效
-    public static final String DELETE_QUEUE = INTERFACE_URL + "api-n/notification-anon/queue/delete?userId=";//用户登录删除队列
-    public static final String GETAPPLY_URL = INTERFACE_URL + "api-apps/operation/apps-anon/appName?appId="; //获取当前三方应用首页链接
-    public static final String GETRabbitMQAddress = INTERFACE_URL+"api-apps/menu/apps-anon/rabbitMqInfo";//获取RabbitMq推送服务地址
-    public static final String userPushRelationUpdate = INTERFACE_URL+"api-msg/userPushRelation/updateInfo";//保存用户推送关系
-    public static final String userFirstUpdate = INTERFACE_URL+"api-msg/userPushRelation/firstUpdate";//用户第一次登录
-    public static final String GET_H5_VERSION = INTERFACE_URL+"api-apps/apps-anon/client/h5Url";//获取h5版本号
     public static final String WEBVERSION = INTERFACE_URL+"/api-p/tClientVersion/newVersion?equipmentType=2&updateVersion=";//apk升级功能
     public static final String APP_AUTH_CHECK = INTERFACE_URL+"api-apps/apps-anon/client/platformPermissionAndPutaway";//http://172.16.14.231:18089/
     public static final String userPushRelation = INTERFACE_URL+"/api-n/userDevice/register";//保存用户推送关系
+    public static final String userUnbindRelation = INTERFACE_URL+"/api-n/userDevice/logout";//保存用户推送关系
 
 
     public static final String NO_AUTH_TIP = "您的企业暂未开通此应用，请联系企业管理页开通后再试。";
@@ -102,6 +69,19 @@ public class Constant {
         String[] str = {page_head, interface_head};
         return  str;
     }
+
+    //扫描条码服务广播
+    //Scanning barcode service broadcast.
+    public static final String SCN_CUST_ACTION_SCODE = "com.scanner.broadcast";
+    //条码扫描数据广播
+    //Barcode scanning data broadcast.
+    public static final String SCN_CUST_EX_SCODE = "scannerdata";
+    //扫描条码结果
+    public static final String SCN_CUST_EX_RESULT = "scanner_data";
+    //移动扫描条码服务广播
+    public static final String SCAN_ACTION = "scan.rcv.message";
+
+    public static final int PDA_TYPE = 1; // 0:肖邦； 1：移动PDA
 
 
 }
